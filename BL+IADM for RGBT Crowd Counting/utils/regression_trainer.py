@@ -16,7 +16,7 @@ from datasets.crowd import Crowd
 from losses.bay_loss import Bay_Loss
 from losses.post_prob import Post_Prob
 from models.fusion import fusion_model
-from models.CSRNet_IADM import FusionCSRNet
+#from models.CSRNet_IADM import FusionCSRNet
 import matplotlib.pyplot as plt
 from utils.census_transform import *
 from utils.fpn import *

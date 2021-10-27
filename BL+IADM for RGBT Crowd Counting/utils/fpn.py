@@ -138,8 +138,13 @@ class FPN(nn.Module):
         self.block5 = Block([c4, c4, c4, c4], in_channels=c4)
 
 
-        self.conv1 = nn.Conv2d(3, int(ratio*64), kernel_size=7, stride=1, padding=3, bias=False)
+        #self.conv1 = nn.Conv2d(3, int(ratio*64), kernel_size=7, stride=1, padding=3, bias=False)
+        self.conv1 = nn.Conv2d(c4, 64, kernel_size=7, stride=1, padding=3, bias=False)
+        self.conv2 = nn.Conv2d(256, 4, kernel_size=1, stride=1, padding=0, bias=False)
+
         self.bn1 = nn.BatchNorm2d(64)
+
+        #self.fc1 = nn.Linear(32768, 1024)
 
         # Bottom-up layers
         self.layer1 = self._make_layer(block,  64, num_blocks[0], stride=1)
@@ -193,7 +198,7 @@ class FPN(nn.Module):
         return F.upsample(x, size=(H,W), mode='bilinear') + y
 
     def forward(self, x):
-        print("타입은???", type(x))
+        #print("타입은???", type(x))
         RGB = x[0]
         T = x[1]
 
@@ -205,10 +210,16 @@ class FPN(nn.Module):
         x = shared
         x = F.upsample_bilinear(x, scale_factor=2)
 
-        # print("x is*****", x)
+        #print("x is*****", x.shape)
 
         # Bottom-up
-        c1 = F.relu(self.bn1(self.conv1(x)))
+        x1 = self.conv1(x)
+        #print("x1 is*****",x1.shape)
+        x2 = self.bn1(x1)
+        #print("x2 is*****",x2.shape)
+        c1 = F.relu(x2)
+        #print("c1 is*****",c1.shape)
+        #c1 = F.relu(self.bn1(self.conv1(x)))
         c1 = F.max_pool2d(c1, kernel_size=3, stride=2, padding=1)
         c2 = self.layer1(c1)
         c3 = self.layer2(c2)
@@ -223,6 +234,11 @@ class FPN(nn.Module):
         p4 = self.smooth1(p4)
         p3 = self.smooth2(p3)
         p2 = self.smooth3(p2)
+
+        #print("p2 is*****",p2.shape)
+        p2 = self.conv2(p2)
+        #print("p2 is*****",p2.shape)
+        #print("fpn finish")
 
         return torch.abs(p2)
 
